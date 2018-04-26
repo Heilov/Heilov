@@ -19,7 +19,11 @@ import com.facebook.FacebookSdk;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -27,6 +31,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -48,9 +53,11 @@ public class SignUpActivity extends AppCompatActivity {
     private SignInButton googleButton;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
-
+    private static final int RC_SIGN_IN = 9001;
     private TwitterLoginButton mLoginButton;
-    private CallbackManager mCallbackManager ;
+    private CallbackManager mCallbackManager;
+    private SignInButton mGoogleSignInButton;
+    private GoogleSignInClient mGoogleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +96,13 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
-
+        mGoogleSignInButton = (SignInButton) findViewById(R.id.sign_in_buttonGoogle);
+        mGoogleSignInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signIn();
+            }
+        });
         //Get Firebase auth instance
         auth = FirebaseAuth.getInstance();
 
@@ -185,6 +198,16 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = auth.getCurrentUser();
+        if(currentUser != null){
+            Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+            startActivity(intent);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         progressBar.setVisibility(View.GONE);
@@ -193,6 +216,14 @@ public class SignUpActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+
 
         // Pass the activity result to the Twitter login button.
         mLoginButton.onActivityResult(requestCode, resultCode, data);
@@ -245,20 +276,59 @@ public class SignUpActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             //  Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = auth.getCurrentUser();
-                          //  updateUI(user);
-
+                            //  updateUI(user);
 
 
                         } else {
                             // If sign in fails, display a message to the user.
-                          //  Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            //  Log.w(TAG, "signInWithCredential:failure", task.getException());
                             Toast.makeText(SignUpActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-                           // updateUI(null);
+                            // updateUI(null);
                         }
 
                         // ...
                     }
                 });
+    }
+
+
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+            auth.signInWithCredential(credential)
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                // Sign in success, update UI with the signed-in user's information
+                                //  Log.d(TAG, "signInWithCredential:success");
+                                FirebaseUser user = auth.getCurrentUser();
+                                //  updateUI(user);
+                            } else {
+                                // If sign in fails, display a message to the user.
+                                //  Log.w(TAG, "signInWithCredential:failure", task.getException());
+                                //  Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
+                                //  updateUI(null);
+                            }
+
+                            // [START_EXCLUDE]
+                            //hideProgressDialog();
+                            // [END_EXCLUDE]
+                        }
+                    });
+            //   updateUI(account);
+        } catch (ApiException e) {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            //    Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+            // updateUI(null);
+        }
+    }
+
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 }
