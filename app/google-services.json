@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "742458317466-9qh83ia5lo4slrolvl4gi655o8f050ta.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.heilov",
+            "certificate_hash": "58f9eb68e386949b150e1a1a21cc469c6a39ee1f"
+          }
+        },
+        {
           "client_id": "742458317466-1v8g27s55gk3cg1k2f257usid33dk3f3.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
