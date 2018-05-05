@@ -3,6 +3,7 @@ package com.heilov.heilov.Activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,13 +14,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.facebook.AccessToken;
+import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.heilov.heilov.R;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private FirebaseAuth auth;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,6 +49,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -61,38 +67,36 @@ public class MainActivity extends AppCompatActivity
 
 /**********    AM INCERCAT SA IAU DATE (POZA SI EMAIL) DIN CONTUL DE TWITTER, NU MERGE DEOCAMDATA     ********************
  *
-        final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+ final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+ navigationView.setNavigationItemSelectedListener(this);
 
-        Call<User> user = TwitterCore.getInstance().getApiClient().getAccountService().verifyCredentials(false, false, false);
-        user.enqueue(new Callback<User>() {
-            @Override
-            public void success(Result<User> userResult) {
-                String name = userResult.data.name;
-                String email = userResult.data.email;
-                // _normal (48x48px) | _bigger (73x73px) | _mini (24x24px)
-                String photoUrlNormalSize   = userResult.data.profileImageUrl;
-                String photoUrlBiggerSize   = userResult.data.profileImageUrl.replace("_normal", "_bigger");
-                String photoUrlMiniSize     = userResult.data.profileImageUrl.replace("_normal", "_mini");
-                String photoUrlOriginalSize = userResult.data.profileImageUrl.replace("_normal", "");
+ Call<User> user = TwitterCore.getInstance().getApiClient().getAccountService().verifyCredentials(false, false, false);
+ user.enqueue(new Callback<User>() {
+@Override public void success(Result<User> userResult) {
+String name = userResult.data.name;
+String email = userResult.data.email;
+// _normal (48x48px) | _bigger (73x73px) | _mini (24x24px)
+String photoUrlNormalSize   = userResult.data.profileImageUrl;
+String photoUrlBiggerSize   = userResult.data.profileImageUrl.replace("_normal", "_bigger");
+String photoUrlMiniSize     = userResult.data.profileImageUrl.replace("_normal", "_mini");
+String photoUrlOriginalSize = userResult.data.profileImageUrl.replace("_normal", "");
 
 
-                TextView textView = navigationView.findViewById(R.id.nameText);
-                textView.setText(name);
-                //textView = navigationView.findViewById(R.id.emailText);
-                //textView.setText(email);
+TextView textView = navigationView.findViewById(R.id.nameText);
+textView.setText(name);
+//textView = navigationView.findViewById(R.id.emailText);
+//textView.setText(email);
 
-                //ImageView imageView = navigationView.findViewById(R.id.imageView);
-                //imageView.setImageURI(Uri.parse(photoUrlMiniSize));
-            }
+//ImageView imageView = navigationView.findViewById(R.id.imageView);
+//imageView.setImageURI(Uri.parse(photoUrlMiniSize));
+}
 
-            @Override
-            public void failure(TwitterException exc) {
-                //Log.d("TwitterKit", "Verify Credentials Failure", exc);
-            }
-        });
+@Override public void failure(TwitterException exc) {
+//Log.d("TwitterKit", "Verify Credentials Failure", exc);
+}
+});
  *
-****************************************************/
+ ****************************************************/
 
         return true;
     }
@@ -109,6 +113,11 @@ public class MainActivity extends AppCompatActivity
             return true;
         }
 
+        if (id == R.id.nav_logout) {
+            Log.w("2Sign", "onActivityResultFail");
+            auth = FirebaseAuth.getInstance();
+            auth.signOut();
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -131,9 +140,22 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_send) {
 
         }
+        if (id == R.id.nav_logout) {
+            Log.w("1Sign", "onActivityResultFail");
+            auth = FirebaseAuth.getInstance();
 
+            if (AccessToken.getCurrentAccessToken() != null && com.facebook.Profile.getCurrentProfile() != null) {
+
+                LoginManager.getInstance().logOut();
+            }
+            auth.signOut();
+
+
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 }
+
