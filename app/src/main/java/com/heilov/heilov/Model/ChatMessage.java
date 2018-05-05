@@ -1,4 +1,4 @@
-package com.heilov.heilov;
+package com.heilov.heilov.Model;
 
 import java.util.Date;
 

@@ -1,4 +1,4 @@
-package com.heilov.heilov;
+package com.heilov.heilov.Activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.content.Intent;
@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.heilov.heilov.R;
 
 /**
  * Created by adeli on 4/26/2018.
@@ -40,8 +41,6 @@ public class LoginActivity  extends AppCompatActivity {
         // set the view now
         setContentView(R.layout.activity_login);
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
 
         inputEmail = (EditText) findViewById(R.id.email);
         inputPassword = (EditText) findViewById(R.id.password);

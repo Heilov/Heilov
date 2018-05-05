@@ -1,4 +1,4 @@
-package com.heilov.heilov;
+package com.heilov.heilov.Activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,18 +17,15 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -39,6 +36,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
+import com.heilov.heilov.R;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
@@ -55,15 +53,13 @@ import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 public class SignUpActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
     private EditText inputEmail, inputPassword;
-    private Button btnSignIn, btnSignUp, btnResetPassword, btnContinueFB;
-    private SignInButton googleButton;
+    private Button btnSignIn, btnSignUp, btnResetPassword;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
     private static final int RC_SIGN_IN = 9001;
     private TwitterLoginButton mLoginButton;
     private CallbackManager mCallbackManager;
-    private SignInButton mGoogleSignInButton;
-    private GoogleSignInClient mGoogleSignInClient;
+
     private String TAG = "HeiLov";
 
     private GoogleApiClient mGoogleApiClient;
@@ -73,7 +69,7 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        FacebookSdk.sdkInitialize(getApplicationContext());
 
         TwitterConfig config = new TwitterConfig.Builder(this)
                 .twitterAuthConfig(new TwitterAuthConfig(getString(R.string.twitter_consumer_key), getString(R.string.twitter_consumer_secret)))
@@ -272,7 +268,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         }
 
 
-
         // Pass the activity result to the Twitter login button.
         mLoginButton.onActivityResult(requestCode, resultCode, data);
 
@@ -356,15 +351,15 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                             Toast.makeText(SignUpActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
-                        }else{
+                        } else {
                             Log.w(TAG, "signInWithCredential:succed");
+                            Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                            startActivity(intent);
                         }
                     }
                 });
     }
-// [END auth_with_google]
 
-    // [START signin]
     private void signIn() {
         Log.w(TAG, "signIn:succed");
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
