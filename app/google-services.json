@@ -15,6 +15,10 @@
       },
       "oauth_client": [
         {
+          "client_id": "742458317466-4c6euho6qc15v0n9tpkuc058no9q8kk5.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
           "client_id": "742458317466-9qh83ia5lo4slrolvl4gi655o8f050ta.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -48,7 +52,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "742458317466-oobqpoqk3mij2vbc7fiei5qjodmgkdqm.apps.googleusercontent.com",
+              "client_id": "742458317466-4c6euho6qc15v0n9tpkuc058no9q8kk5.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -66,6 +70,18 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "742458317466-19fe832nn1dv6rmbr9u3d9s6gb556m3d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.heilov.heilov",
+            "certificate_hash": "58f9eb68e386949b150e1a1a21cc469c6a39ee1f"
+          }
+        },
+        {
+          "client_id": "742458317466-4c6euho6qc15v0n9tpkuc058no9q8kk5.apps.googleusercontent.com",
+          "client_type": 3
+        },
         {
           "client_id": "742458317466-kue3f6on1ijnrcq85anesthm0l3ouhk0.apps.googleusercontent.com",
           "client_type": 1,
@@ -92,7 +108,7 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "742458317466-oobqpoqk3mij2vbc7fiei5qjodmgkdqm.apps.googleusercontent.com",
+              "client_id": "742458317466-4c6euho6qc15v0n9tpkuc058no9q8kk5.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -36,15 +36,20 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
+import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
+
+import retrofit2.Call;
 
 
 /**
@@ -278,7 +283,7 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
 
     private void handleTwitterSession(TwitterSession session) {
 
-        AuthCredential credential = TwitterAuthProvider.getCredential(
+        final AuthCredential credential = TwitterAuthProvider.getCredential(
                 session.getAuthToken().token,
                 session.getAuthToken().secret);
 
@@ -291,8 +296,13 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                             startActivity(intent);
                             // Sign in success, update UI with the signed-in user's information
                             FirebaseUser user = auth.getCurrentUser();
-                            //updateUI(user);
-                        } else {
+
+
+
+
+                        } else
+
+                        {
                             // If sign in fails, display a message to the user.
                             // Toast.makeText(TwitterLoginActivity.this, "Authentication failed.",
                             //Toast.LENGTH_SHORT).show();

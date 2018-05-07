@@ -13,12 +13,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 
 import com.facebook.AccessToken;
+import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.heilov.heilov.R;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterCore;
+import com.twitter.sdk.android.core.TwitterSession;
 
 
 public class MainActivity extends AppCompatActivity
@@ -93,6 +99,8 @@ textView.setText(name);
 
 @Override public void failure(TwitterException exc) {
 //Log.d("TwitterKit", "Verify Credentials Failure", exc);
+}@Override public void failure(TwitterException exc) {
+//Log.d("TwitterKit", "Verify Credentials Failure", exc);
 }
 });
  *
@@ -144,9 +152,16 @@ textView.setText(name);
             Log.w("1Sign", "onActivityResultFail");
             auth = FirebaseAuth.getInstance();
 
-            if (AccessToken.getCurrentAccessToken() != null && com.facebook.Profile.getCurrentProfile() != null) {
+            if (AccessToken.getCurrentAccessToken() != null && Profile.getCurrentProfile() != null) {
 
                 LoginManager.getInstance().logOut();
+            }
+
+            TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
+            if (twitterSession != null) {
+
+                TwitterCore.getInstance().getSessionManager().clearActiveSession();
+
             }
             auth.signOut();
 
