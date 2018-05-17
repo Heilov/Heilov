@@ -4,7 +4,15 @@ public class User {
     public String name;
     public String email;
     public String profilePic;
-    public Status status;
+
+    public User(){
+
+    }
+    public User(String name, String email, String profilePic) {
+        this.name = name;
+        this.email = email;
+        this.profilePic = profilePic;
+    }
 
     public String getName() {
         return name;
@@ -30,11 +38,5 @@ public class User {
         this.profilePic = profilePic;
     }
 
-    public Status getStatus() {
-        return status;
-    }
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
 }

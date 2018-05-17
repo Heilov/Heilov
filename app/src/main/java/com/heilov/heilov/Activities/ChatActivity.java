@@ -19,51 +19,46 @@ import com.heilov.heilov.R;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private FirebaseListAdapter<ChatMessage> adapter;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
         FloatingActionButton fab =
-                (FloatingActionButton)findViewById(R.id.fab);
+                findViewById(R.id.fab);
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                EditText input = (EditText)findViewById(R.id.input);
+        fab.setOnClickListener(view -> {
+            EditText input = findViewById(R.id.input);
 
-                // Read the input field and push a new instance
-                // of ChatMessage to the Firebase database
-                FirebaseDatabase.getInstance()
-                        .getReference()
-                        .push()
-                        .setValue(new ChatMessage(input.getText().toString(),
-                                FirebaseAuth.getInstance()
-                                        .getCurrentUser()
-                                        .getEmail())
-                        );
+            // Read the input field and push a new instance
+            // of ChatMessage to the Firebase database
+            FirebaseDatabase.getInstance()
+                    .getReference()
+                    .push()
+                    .setValue(new ChatMessage(input.getText().toString(),
+                            FirebaseAuth.getInstance()
+                                    .getCurrentUser()
+                                    .getEmail())
+                    );
 
-                // Clear the input
-                input.setText("");
-            }
+            // Clear the input
+            input.setText("");
         });
 
         displayChatMessages();
     }
 
     private void displayChatMessages() {
-        ListView listOfMessages = (ListView)findViewById(R.id.list_of_messages);
+        ListView listOfMessages = findViewById(R.id.list_of_messages);
 
-        adapter = new FirebaseListAdapter<ChatMessage>(this, ChatMessage.class,
+        FirebaseListAdapter<ChatMessage> adapter = new FirebaseListAdapter<ChatMessage>(this, ChatMessage.class,
                 R.layout.message, FirebaseDatabase.getInstance().getReference()) {
             @Override
             protected void populateView(View v, ChatMessage model, int position) {
                 // Get references to the views of message.xml
-                TextView messageText = (TextView)v.findViewById(R.id.message_text);
-                TextView messageUser = (TextView)v.findViewById(R.id.message_user);
-                TextView messageTime = (TextView)v.findViewById(R.id.message_time);
+                TextView messageText = v.findViewById(R.id.message_text);
+                TextView messageUser = v.findViewById(R.id.message_user);
+                TextView messageTime = v.findViewById(R.id.message_time);
 
                 // Set their text
                 messageText.setText(model.getMessageText());
@@ -79,7 +74,7 @@ public class ChatActivity extends AppCompatActivity {
     }
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {

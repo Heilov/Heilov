@@ -9,47 +9,51 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
 import android.widget.ProgressBar;
 import android.widget.Toast;
+
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+
 import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
+
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
-import com.heilov.heilov.Model.User;
+
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.heilov.heilov.R;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
-import com.twitter.sdk.android.core.TwitterAuthToken;
 import com.twitter.sdk.android.core.TwitterConfig;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterException;
 import com.twitter.sdk.android.core.TwitterSession;
 import com.twitter.sdk.android.core.identity.TwitterLoginButton;
+import com.twitter.sdk.android.core.models.User;
 
 import retrofit2.Call;
+import retrofit2.Response;
 
 
 /**
@@ -58,7 +62,7 @@ import retrofit2.Call;
 
 public class SignUpActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
     private EditText inputEmail, inputPassword;
-    private Button btnSignIn, btnSignUp, btnResetPassword;
+    private Button btnResetPassword;
     private ProgressBar progressBar;
     private FirebaseAuth auth;
     private static final int RC_SIGN_IN = 9001;
@@ -67,8 +71,9 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
 
     private String TAG = "HeiLov";
 
+    private String avatarURL = "notFound";
     private GoogleApiClient mGoogleApiClient;
-
+    private Bundle picBundle = new Bundle();
     private FirebaseAuth.AuthStateListener mAuthStateListener;
 
     @Override
@@ -87,12 +92,9 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         auth = FirebaseAuth.getInstance();
 
 
-        mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                //   updateUI(user);
-            }
+        mAuthStateListener = firebaseAuth -> {
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            //   updateUI(user);
         };
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken("742458317466-4c6euho6qc15v0n9tpkuc058no9q8kk5.apps.googleusercontent.com")
@@ -132,15 +134,11 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         });
 
 
-        //Get Firebase auth instance
-
-
-        // btnContinueFB = (Button) findViewById(R.id.login_buttonFb);
-        btnSignIn = (Button) findViewById(R.id.sign_in_button);
-        btnSignUp = (Button) findViewById(R.id.sign_up_button);
-        inputEmail = (EditText) findViewById(R.id.email);
-        inputPassword = (EditText) findViewById(R.id.password);
-        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        Button btnSignIn = findViewById(R.id.sign_in_button);
+        Button btnSignUp = findViewById(R.id.sign_up_button);
+        inputEmail = findViewById(R.id.email);
+        inputPassword = findViewById(R.id.password);
+        progressBar = findViewById(R.id.progressBar);
 
 
         //Twitter
@@ -159,59 +157,50 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         });
 
 
-        btnSignIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        btnSignIn.setOnClickListener(v -> {
 
-                Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
-                startActivity(intent);
-            }
+            Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
+            startActivity(intent);
         });
 
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        btnSignUp.setOnClickListener(v -> {
 
-                String email = inputEmail.getText().toString().trim();
-                String password = inputPassword.getText().toString().trim();
+            String email = inputEmail.getText().toString().trim();
+            String password = inputPassword.getText().toString().trim();
 
-                if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (password.length() < 6) {
-                    Toast.makeText(getApplicationContext(), "Password too short, enter minimum 6 characters!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                progressBar.setVisibility(View.VISIBLE);
-                //create user
-                auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(SignUpActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                Toast.makeText(SignUpActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
-                                progressBar.setVisibility(View.GONE);
-                                // If sign in fails, display a message to the user. If sign in succeeds
-                                // the auth state listener will be notified and logic to handle the
-                                // signed in user can be handled in the listener.
-                                if (!task.isSuccessful()) {
-                                    Toast.makeText(SignUpActivity.this, "Authentication failed." + task.getException(),
-                                            Toast.LENGTH_SHORT).show();
-                                } else {
-                                    startActivity(new Intent(SignUpActivity.this, MainActivity.class));
-                                    finish();
-                                }
-                            }
-                        });
-
+            if (TextUtils.isEmpty(email)) {
+                Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            if (TextUtils.isEmpty(password)) {
+                Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (password.length() < 6) {
+                Toast.makeText(getApplicationContext(), "Password too short, enter minimum 6 characters!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            progressBar.setVisibility(View.VISIBLE);
+            //create user
+            auth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener(SignUpActivity.this, task -> {
+                        Toast.makeText(SignUpActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(SignUpActivity.this, "Authentication failed." + task.getException(),
+                                    Toast.LENGTH_SHORT).show();
+                        } else {
+                            startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                            finish();
+                        }
+                    });
+
         });
     }
 
@@ -262,6 +251,7 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                 // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = result.getSignInAccount();
                 Log.w(TAG, "onActivityResult");
+                assert account != null;
                 firebaseAuthWithGoogle(account);
             } else {
                 // Google Sign In failed, update UI appropriately
@@ -283,34 +273,62 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
 
     private void handleTwitterSession(TwitterSession session) {
 
-        final AuthCredential credential = TwitterAuthProvider.getCredential(
+        final AuthCredential credential;
+        credential = TwitterAuthProvider.getCredential(
                 session.getAuthToken().token,
                 session.getAuthToken().secret);
 
+
+        //Getting the account service of the user logged in
+
+
         auth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            // Sign in success, update UI with the signed-in user's information
-                            FirebaseUser user = auth.getCurrentUser();
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+
+                        TwitterCore.getInstance().getApiClient(session).getAccountService().verifyCredentials(true, false, true).enqueue(new retrofit2.Callback<com.twitter.sdk.android.core.models.User>() {
+                            @Override
+                            public void onResponse(Call<com.twitter.sdk.android.core.models.User> call, Response<com.twitter.sdk.android.core.models.User> response) {
+                                if (response.isSuccessful()) {
+                                    //If it succeeds creating a User object from userResult.data
+                                    com.twitter.sdk.android.core.models.User user;
+                                    user = response.body();
+                                    //Getting the profile image url
+                                    avatarURL = user.profileImageUrl.replace("_normal", "");
+                                    FirebaseUser currentUser = auth.getCurrentUser();
+                                    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+                                    DatabaseReference ref = database.getReference("server/saving-data/userdata");
+                                    DatabaseReference usersRef = ref.child("users");
+                                    usersRef.child("user").setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), avatarURL));
+
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<User> call, Throwable t) {
+
+                            }
+                        });
 
 
+                        Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                        intent.putExtra("avatar", avatarURL);
+                        startActivity(intent);
+                        // Sign in success, update UI with the signed-in user's information
+                        // FirebaseUser user = auth.getCurrentUser();
 
 
-                        } else
+                    } else
 
-                        {
-                            // If sign in fails, display a message to the user.
-                            // Toast.makeText(TwitterLoginActivity.this, "Authentication failed.",
-                            //Toast.LENGTH_SHORT).show();
-                            //  updateUI(null);
-                        }
-
-                        // ...
+                    {
+                        Log.d(TAG, "Twitter failed");
+                        // If sign in fails, display a message to the user.
+                        // Toast.makeText(TwitterLoginActivity.this, "Authentication failed.",
+                        //Toast.LENGTH_SHORT).show();
+                        //  updateUI(null);
                     }
+
+                    // ...
                 });
     }
 
@@ -320,28 +338,26 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
         auth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUser user = auth.getCurrentUser();
-                            //  updateUI(user);
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                        getFacebookData();
+//                        Log.d(TAG, picBundle.getString("avatar"));
+//                        picBundle.getString("avatar");
+                        startActivity(intent);
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInWithCredential:success");
 
 
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(SignUpActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            // updateUI(null);
-                        }
-
-                        // ...
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInWithCredential:failure", task.getException());
+                        Toast.makeText(SignUpActivity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
+                        // updateUI(null);
                     }
+
+                    // ...
                 });
     }
 
@@ -349,23 +365,20 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         Log.w(TAG, "firebaseAuthWithGoogle:succed");
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         auth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
+                .addOnCompleteListener(this, task -> {
 
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
+                    // If sign in fails, display a message to the user. If sign in succeeds
+                    // the auth state listener will be notified and logic to handle the
+                    // signed in user can be handled in the listener.
 
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(SignUpActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                        } else {
-                            Log.w(TAG, "signInWithCredential:succed");
-                            Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
-                            startActivity(intent);
-                        }
+                    if (!task.isSuccessful()) {
+                        Toast.makeText(SignUpActivity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
+                        Log.w(TAG, "signInWithCredential:failure", task.getException());
+                    } else {
+                        Log.w(TAG, "signInWithCredential:succed");
+                        Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
+                        startActivity(intent);
                     }
                 });
     }
@@ -391,5 +404,49 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         if (i == R.id.sign_in_buttonGoogle) {
             signIn();
         }
+    }
+
+
+    private void getFacebookData() {
+        String FACEBOOK_FIELD_PROFILE_IMAGE = "picture.type(large)";
+        String FACEBOOK_FIELDS = "fields";
+
+        GraphRequest request = GraphRequest.newMeRequest(
+                AccessToken.getCurrentAccessToken(),
+                (object, response) -> updateAvatar(getImageUrl(response)));
+        Bundle parameters = new Bundle();
+        parameters.putString(FACEBOOK_FIELDS, FACEBOOK_FIELD_PROFILE_IMAGE);
+        request.setParameters(parameters);
+        request.executeAsync();
+    }
+
+    private String getImageUrl(GraphResponse response) {
+        String url = null;
+        String FACEBOOK_FIELD_PICTURE = "picture";
+        String FACEBOOK_FIELD_DATA = "data";
+        try {
+            String FACEBOOK_FIELD_URL = "url";
+            url = response.getJSONObject()
+                    .getJSONObject(FACEBOOK_FIELD_PICTURE)
+                    .getJSONObject(FACEBOOK_FIELD_DATA)
+                    .getString(FACEBOOK_FIELD_URL);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        FirebaseUser currentUser = auth.getCurrentUser();
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference ref = database.getReference("server/saving-data/userdata");
+        DatabaseReference usersRef = ref.child("users");
+        usersRef.child("user").setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), url));
+
+
+
+        return url;
+    }
+
+
+    public void updateAvatar(String url) {
+        this.avatarURL = url;
+
     }
 }
