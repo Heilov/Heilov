@@ -1,9 +1,11 @@
 package com.heilov.heilov.Activities;
 
-import android.app.ProgressDialog;
+
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
@@ -19,24 +21,22 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
+import android.view.View;
+
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.Profile;
 import com.facebook.login.LoginManager;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.heilov.heilov.Model.Photo;
 import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
 import com.twitter.sdk.android.core.Twitter;
@@ -45,9 +45,10 @@ import com.twitter.sdk.android.core.TwitterConfig;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterSession;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity
                 for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
                     User user = singleSnapshot.getValue(User.class);
                     if (user.getEmail().equals(currentUser.getEmail())) {
-                       // Glide.with(MainActivity.this).load(user.getProfilePic()).into((ImageView) findViewById(R.id.imageView2));
+                        Glide.with(MainActivity.this).load(user.getProfilePic()).into((ImageView) findViewById(R.id.imageView2));
                     }
                 }
             }
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -134,8 +135,8 @@ public class MainActivity extends AppCompatActivity
         //ImageView userpicture = (ImageView) findViewById(R.id.imageView);
 
         //Picasso.with(this)
-                //.load("https://graph.facebook.com/" + user.getProviderId()+ "/picture?type=large")
-                //.into(userpicture);
+        //.load("https://graph.facebook.com/" + user.getProviderId()+ "/picture?type=large")
+        //.into(userpicture);
 
         return true;
     }
@@ -162,7 +163,7 @@ public class MainActivity extends AppCompatActivity
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
@@ -207,10 +208,11 @@ public class MainActivity extends AppCompatActivity
 
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
         }
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
     /*
     LOAD image din telefon
      */
@@ -218,9 +220,9 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(resultCode==RESULT_OK && requestCode==1){
+        if (resultCode == RESULT_OK && requestCode == 1) {
             Uri selectedImage = data.getData();
-            String[] filePathColumn = { MediaStore.Images.Media.DATA };
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
             Cursor cursor = getContentResolver().query(selectedImage,
                     filePathColumn, null, null, null);
@@ -236,10 +238,10 @@ public class MainActivity extends AppCompatActivity
             Bitmap scaled = null;
             try {
                 bmp = getBitmapFromUri(selectedImage);
-                int nh = (int) ( bmp.getHeight() * (200.0 / bmp.getWidth()) );
+                int nh = (int) (bmp.getHeight() * (200.0 / bmp.getWidth()));
                 scaled = Bitmap.createScaledBitmap(bmp, 200, nh, true);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
+
                 e.printStackTrace();
             }
             imageView.setImageBitmap(scaled);
@@ -260,14 +262,19 @@ public class MainActivity extends AppCompatActivity
 
     public void SaveToFirebase(Bitmap bitmap) {
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ref = database.getReference("server/saving-data/pics");
+        DatabaseReference ref = database.getReference("server/saving-data/");
         DatabaseReference usersRef = ref.child("pics");
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         String imageEncoded = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
+        Random rand = new Random();
 
-        usersRef.child(auth.getCurrentUser().getUid()).setValue(new Photo(imageEncoded, auth.getCurrentUser().getEmail()));
+        int  n = rand.nextInt(5000) + 1;
+        usersRef.child(auth.getCurrentUser().getUid()+n).setValue(new Photo(imageEncoded, auth.getCurrentUser().getEmail()));
     }
+
+
+
 }
 

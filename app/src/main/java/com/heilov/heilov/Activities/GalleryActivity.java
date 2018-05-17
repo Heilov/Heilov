@@ -7,7 +7,11 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
+import android.widget.ArrayAdapter;
+import android.widget.Gallery;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.ListView;
 
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.auth.FirebaseAuth;
@@ -18,18 +22,21 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.heilov.heilov.Model.Photo;
 import com.heilov.heilov.R;
+import com.heilov.heilov.Utils.ImageAdapter;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GalleryActivity extends AppCompatActivity {
     private FirebaseListAdapter<Photo> adapter;
-
+    GridView gv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
-
+        gv = (GridView) findViewById(R.id.gridview);
         displayPhotos();
     }
 
@@ -40,19 +47,25 @@ public class GalleryActivity extends AppCompatActivity {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        DatabaseReference ref = mDatabase.child("server/saving-data/pics/pics/"+auth.getCurrentUser().getUid()+"/bitmap");
-        ref.addValueEventListener(new ValueEventListener() {
+        DatabaseReference ref = mDatabase.child("server/saving-data/pics/");
+        ValueEventListener valueEventListener = ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                ArrayList<Bitmap> photos = new ArrayList<>();
+                for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    Photo photo = singleSnapshot.getValue(Photo.class);
+                    if (photo.getUser().equals(auth.getCurrentUser().getEmail())) {
+                        try {
+                            Bitmap imageBitmap = decodeFromFirebaseBase64(photo.getBitmap());
+                            photos.add(imageBitmap);
 
-                try {
-                    Bitmap imageBitmap = decodeFromFirebaseBase64((String) dataSnapshot.getValue());
-                    ImageView t = findViewById(R.id.imageView2);
-                    t.setImageBitmap(imageBitmap);// aici da null pointer
-                } catch (IOException e) {
-                    e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
 
+                gv.setAdapter(new ImageAdapter(GalleryActivity.this,photos));
             }
 
             @Override

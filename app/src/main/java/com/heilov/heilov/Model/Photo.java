@@ -10,8 +10,10 @@ import java.io.ByteArrayOutputStream;
  */
 
 public class Photo {
-    String bitmap;
+    private String bitmap;
     private String user;
+
+
 
     public Photo(String bitmap, String user) {
 

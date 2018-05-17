@@ -299,7 +299,7 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                                     final FirebaseDatabase database = FirebaseDatabase.getInstance();
                                     DatabaseReference ref = database.getReference("server/saving-data/userdata");
                                     DatabaseReference usersRef = ref.child("users");
-                                    usersRef.child("user").setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), avatarURL));
+                                    usersRef.child("user"+currentUser.getUid()).setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), avatarURL));
 
                                 }
                             }
@@ -437,7 +437,7 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference ref = database.getReference("server/saving-data/userdata");
         DatabaseReference usersRef = ref.child("users");
-        usersRef.child("user").setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), url));
+        usersRef.child("user"+currentUser.getUid()).setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), url));
 
 
 
