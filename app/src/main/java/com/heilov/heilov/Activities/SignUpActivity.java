@@ -9,10 +9,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -29,17 +27,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-
 import com.google.firebase.auth.AuthCredential;
-
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
-
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.heilov.heilov.DAO.UserDAO;
 import com.heilov.heilov.R;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.Result;
@@ -55,14 +49,9 @@ import com.twitter.sdk.android.core.models.User;
 import retrofit2.Call;
 import retrofit2.Response;
 
-
-/**
- * Created by adeli on 4/26/2018.
- */
-
 public class SignUpActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener, View.OnClickListener {
     private EditText inputEmail, inputPassword;
-    private Button btnResetPassword;
+
     private ProgressBar progressBar;
     private FirebaseAuth auth;
     private static final int RC_SIGN_IN = 9001;
@@ -70,10 +59,10 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
     private CallbackManager mCallbackManager;
 
     private String TAG = "HeiLov";
-
+    private UserDAO userDAO;
     private String avatarURL = "notFound";
     private GoogleApiClient mGoogleApiClient;
-    private Bundle picBundle = new Bundle();
+
     private FirebaseAuth.AuthStateListener mAuthStateListener;
 
     @Override
@@ -87,10 +76,9 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                 .build();
         Twitter.initialize(config);
 
-
         setContentView(R.layout.activity_signup);
         auth = FirebaseAuth.getInstance();
-
+        userDAO = new UserDAO();
 
         mAuthStateListener = firebaseAuth -> {
             FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -98,7 +86,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         };
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken("742458317466-4c6euho6qc15v0n9tpkuc058no9q8kk5.apps.googleusercontent.com")
-
                 .requestEmail()
                 .build();
 
@@ -133,13 +120,11 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
             }
         });
 
-
         Button btnSignIn = findViewById(R.id.sign_in_button);
         Button btnSignUp = findViewById(R.id.sign_up_button);
         inputEmail = findViewById(R.id.email);
         inputPassword = findViewById(R.id.password);
         progressBar = findViewById(R.id.progressBar);
-
 
         //Twitter
         mLoginButton = findViewById(R.id.login_buttonTwitter);
@@ -155,7 +140,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                 // updateUI(null);
             }
         });
-
 
         btnSignIn.setOnClickListener(v -> {
 
@@ -221,7 +205,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         mGoogleApiClient.connect();
     }
 
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -230,7 +213,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         }
         mGoogleApiClient.disconnect();
     }
-
 
     @Override
     protected void onResume() {
@@ -245,7 +227,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         if (requestCode == RC_SIGN_IN) {
             Log.w(TAG, "onActivityResult2");
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-
 
             if (result.isSuccess()) {
                 // Google Sign In was successful, authenticate with Firebase
@@ -262,7 +243,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
             }
         }
 
-
         // Pass the activity result to the Twitter login button.
         mLoginButton.onActivityResult(requestCode, resultCode, data);
 
@@ -278,9 +258,7 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                 session.getAuthToken().token,
                 session.getAuthToken().secret);
 
-
         //Getting the account service of the user logged in
-
 
         auth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
@@ -296,11 +274,8 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                                     //Getting the profile image url
                                     avatarURL = user.profileImageUrl.replace("_normal", "");
                                     FirebaseUser currentUser = auth.getCurrentUser();
-                                    final FirebaseDatabase database = FirebaseDatabase.getInstance();
-                                    DatabaseReference ref = database.getReference("server/saving-data/userdata");
-                                    DatabaseReference usersRef = ref.child("users");
-                                    usersRef.child("user"+currentUser.getUid()).setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), avatarURL));
 
+                                    userDAO.saveUser(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), avatarURL, currentUser.getUid()));
                                 }
                             }
 
@@ -310,28 +285,22 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                             }
                         });
 
-
                         Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
                         intent.putExtra("avatar", avatarURL);
                         startActivity(intent);
                         // Sign in success, update UI with the signed-in user's information
                         // FirebaseUser user = auth.getCurrentUser();
 
-
                     } else
 
                     {
                         Log.d(TAG, "Twitter failed");
-                        // If sign in fails, display a message to the user.
-                        // Toast.makeText(TwitterLoginActivity.this, "Authentication failed.",
-                        //Toast.LENGTH_SHORT).show();
-                        //  updateUI(null);
+
                     }
 
                     // ...
                 });
     }
-
 
     private void handleFacebookAccessToken(AccessToken token) {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
@@ -347,7 +316,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                         startActivity(intent);
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(TAG, "signInWithCredential:success");
-
 
                     } else {
                         // If sign in fails, display a message to the user.
@@ -376,6 +344,10 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
                                 Toast.LENGTH_SHORT).show();
                         Log.w(TAG, "signInWithCredential:failure", task.getException());
                     } else {
+                        FirebaseUser currentUser = auth.getCurrentUser();
+                        userDAO.saveUser(new com.heilov.heilov.Model.User(acct.getDisplayName(), acct.getEmail(), acct.getPhotoUrl().toString(), currentUser.getUid()));
+                        mGoogleApiClient.disconnect();
+
                         Log.w(TAG, "signInWithCredential:succed");
                         Intent intent = new Intent(SignUpActivity.this, MainActivity.class);
                         startActivity(intent);
@@ -406,7 +378,6 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
         }
     }
 
-
     private void getFacebookData() {
         String FACEBOOK_FIELD_PROFILE_IMAGE = "picture.type(large)";
         String FACEBOOK_FIELDS = "fields";
@@ -434,16 +405,11 @@ public class SignUpActivity extends AppCompatActivity implements GoogleApiClient
             e.printStackTrace();
         }
         FirebaseUser currentUser = auth.getCurrentUser();
-        final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ref = database.getReference("server/saving-data/userdata");
-        DatabaseReference usersRef = ref.child("users");
-        usersRef.child("user"+currentUser.getUid()).setValue(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), url));
 
-
+        userDAO.saveUser(new com.heilov.heilov.Model.User(currentUser.getDisplayName(), currentUser.getEmail(), url, currentUser.getUid()));
 
         return url;
     }
-
 
     public void updateAvatar(String url) {
         this.avatarURL = url;

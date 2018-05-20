@@ -12,10 +12,6 @@ import com.heilov.heilov.R;
 
 import java.util.ArrayList;
 
-/**
- * Created by adeli on 5/16/2018.
- */
-
 public class ImageAdapter extends BaseAdapter {
     private Context context;
     private ArrayList<Bitmap> bitmapList;
@@ -42,7 +38,7 @@ public class ImageAdapter extends BaseAdapter {
         if (convertView == null) {
             imageView = new ImageView(this.context);
             imageView.setLayoutParams(new GridView.LayoutParams(640, 480));
-          //  imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            //  imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         } else {
             imageView = (ImageView) convertView;
         }
@@ -50,6 +46,5 @@ public class ImageAdapter extends BaseAdapter {
         imageView.setImageBitmap(this.bitmapList.get(position));
         return imageView;
     }
-
 
 }

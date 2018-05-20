@@ -1,17 +1,26 @@
 package com.heilov.heilov.Model;
 
 public class User {
-    public String name;
-    public String email;
-    public String profilePic;
+    private String name;
+    private String email;
+    private String profilePic;
+    private int age;
+    private String gender;
+    private String location;
+    private String uid;
 
-    public User(){
+    public User() {
 
     }
-    public User(String name, String email, String profilePic) {
+
+    public User(String name, String email, String profilePic, String uid) {
+        this.age = 0;
+        this.gender = "";
+        this.location = "";
         this.name = name;
         this.email = email;
         this.profilePic = profilePic;
+        this.uid = uid;
     }
 
     public String getName() {
@@ -38,5 +47,35 @@ public class User {
         this.profilePic = profilePic;
     }
 
+    public int getAge() {
+        return age;
+    }
 
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 }

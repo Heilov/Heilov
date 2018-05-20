@@ -2,17 +2,15 @@ package com.heilov.heilov.Model;
 
 import java.util.Date;
 
-/**
- * Created by adeli on 5/5/2018.
- */
+
 
 public class ChatMessage {
 
     private String messageText;
-    private String messageUser;
+    private User messageUser;
     private long messageTime;
 
-    public ChatMessage(String messageText, String messageUser) {
+    public ChatMessage(String messageText, User messageUser) {
         this.messageText = messageText;
         this.messageUser = messageUser;
 
@@ -24,7 +22,7 @@ public class ChatMessage {
         return messageText;
     }
 
-    public String getMessageUser() {
+    public User getMessageUser() {
         return messageUser;
     }
 
@@ -33,5 +31,14 @@ public class ChatMessage {
     }
 
     public ChatMessage() {
+    }
+
+    @Override
+    public String toString() {
+        return "ChatMessage{" +
+                "messageText='" + messageText + '\'' +
+                ", messageUser='" + messageUser + '\'' +
+                ", messageTime=" + messageTime +
+                '}';
     }
 }

@@ -1,6 +1,5 @@
 package com.heilov.heilov.Activities;
 
-
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -21,21 +20,24 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.Profile;
 import com.facebook.login.LoginManager;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.heilov.heilov.DAO.ChatDAO;
+import com.heilov.heilov.DAO.GalleryDAO;
+import com.heilov.heilov.DAO.UserDAO;
+import com.heilov.heilov.Model.ChatMessage;
+import com.heilov.heilov.Model.Conversation;
 import com.heilov.heilov.Model.Photo;
 import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
@@ -48,14 +50,16 @@ import com.twitter.sdk.android.core.TwitterSession;
 import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
-
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private FirebaseAuth auth;
     private DatabaseReference mDatabase;
-
+    private User loggedUser;
+    private GalleryDAO galleryDAO;
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,41 +70,40 @@ public class MainActivity extends AppCompatActivity
                 .build();
         Twitter.initialize(config);
 
-
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
 
+        galleryDAO = new GalleryDAO();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        DatabaseReference ref = mDatabase.child("server/saving-data//userdata/users");
-        ref.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
-                    User user = singleSnapshot.getValue(User.class);
-                    if (user.getEmail().equals(currentUser.getEmail())) {
-                        Glide.with(MainActivity.this).load(user.getProfilePic()).into((ImageView) findViewById(R.id.imageView2));
-                    }
-                }
-            }
+        UserDAO test = new UserDAO();
+        test.getUser(currentUser.getEmail(), u -> {
+            loggedUser = u;
+            Glide.with(MainActivity.this).load(loggedUser.getProfilePic()).into((ImageView) findViewById(R.id.imageView));
+            TextView email = findViewById(R.id.nameText);
+            email.setText(loggedUser.getName());
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+            User u2 = new User("Matthew", "ardeleanous7@yahoo.com", "http://pbs.twimg.com/profile_images/865669002470846464/3Ep4E8pA.jpg", "UnRPHIa6BFgffA5iOKuQCNQQTUB2");
+            ChatDAO chatDAO = new ChatDAO();
+            chatDAO.saveNewChat(u, u2);
 
-            }
+            ArrayList<ChatMessage> chatMessages = new ArrayList<>();
+            chatMessages.add(new ChatMessage("Test", u2));
+            chatMessages.add(new ChatMessage("Test2", u2));
+            chatMessages.add(new ChatMessage("Test3", u));
+            Conversation c = new Conversation();
+            c.setFirstPerson(u);
+            c.setSecondPerson(u2);
+            c.setListMessageData(chatMessages);
+            c.setUid(u.getUid() + u2.getUid());
+            chatDAO.addNewMessage(c);
         });
 
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MainActivity.this, ChatActivity.class));
-            }
-        });
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(view -> startActivity(new Intent(MainActivity.this, ChatActivity.class)));
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -108,7 +111,7 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
@@ -127,16 +130,8 @@ public class MainActivity extends AppCompatActivity
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
 
-        final NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        //FirebaseUser user = auth.getCurrentUser();
-
-        //ImageView userpicture = (ImageView) findViewById(R.id.imageView);
-
-        //Picasso.with(this)
-        //.load("https://graph.facebook.com/" + user.getProviderId()+ "/picture?type=large")
-        //.into(userpicture);
 
         return true;
     }
@@ -154,7 +149,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (id == R.id.nav_logout) {
-            Log.w("2Sign", "onActivityResultFail");
             auth = FirebaseAuth.getInstance();
             auth.signOut();
         }
@@ -179,35 +173,28 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery) {
             startActivity(new Intent(MainActivity.this, GalleryActivity.class));
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_messages) {
+            startActivity(new Intent(MainActivity.this, MessagesActivity.class));
+        } else if (id == R.id.nav_editProfile) {
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_logout) {
 
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-        if (id == R.id.nav_logout) {
-            Log.w("1Sign", "onActivityResultFail");
             auth = FirebaseAuth.getInstance();
 
             if (AccessToken.getCurrentAccessToken() != null && Profile.getCurrentProfile() != null) {
-
                 LoginManager.getInstance().logOut();
             }
 
             TwitterSession twitterSession = TwitterCore.getInstance().getSessionManager().getActiveSession();
             if (twitterSession != null) {
-
                 TwitterCore.getInstance().getSessionManager().clearActiveSession();
-
             }
+
+
             auth.signOut();
-
-
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
         }
+
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -232,7 +219,7 @@ public class MainActivity extends AppCompatActivity
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
 
-            ImageView imageView = (ImageView) findViewById(R.id.imageView);
+            ImageView imageView = findViewById(R.id.imageView);
 
             Bitmap bmp = null;
             Bitmap scaled = null;
@@ -246,7 +233,7 @@ public class MainActivity extends AppCompatActivity
             }
             imageView.setImageBitmap(scaled);
 
-            SaveToFirebase(scaled);
+            galleryDAO.savePhoto(scaled);
 
         }
     }
@@ -259,22 +246,6 @@ public class MainActivity extends AppCompatActivity
         parcelFileDescriptor.close();
         return image;
     }
-
-    public void SaveToFirebase(Bitmap bitmap) {
-        final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference ref = database.getReference("server/saving-data/");
-        DatabaseReference usersRef = ref.child("pics");
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
-        String imageEncoded = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
-        Random rand = new Random();
-
-        int  n = rand.nextInt(5000) + 1;
-        usersRef.child(auth.getCurrentUser().getUid()+n).setValue(new Photo(imageEncoded, auth.getCurrentUser().getEmail()));
-    }
-
-
 
 }
 

@@ -6,7 +6,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.heilov.heilov"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 27
         versionCode 1
         versionName "1.0"
@@ -45,11 +45,17 @@ dependencies {
 
     //Facebook
     implementation 'com.facebook.android:facebook-android-sdk:4.32.0'
+
+
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.firebaseui:firebase-ui:0.6.0'
+    implementation 'com.google.firebase:firebase-firestore:16.0.0'
 
     //Picasoo
-    compile 'com.squareup.picasso:picasso:2.5.0'
+    implementation 'com.squareup.picasso:picasso:2.5.0'
+
+    implementation 'de.hdodenhof:circleimageview:2.1.0'
+    implementation 'com.android.support:recyclerview-v7:27.1.1'
 }
 
 apply plugin: 'com.google.gms.google-services'
