@@ -7,6 +7,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -16,6 +17,8 @@ import android.widget.LinearLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.heilov.heilov.DAO.ChatDAO;
+import com.heilov.heilov.DAO.MessagesCallback;
+import com.heilov.heilov.DAO.UserCallback;
 import com.heilov.heilov.DAO.UserDAO;
 import com.heilov.heilov.Model.ChatMessage;
 import com.heilov.heilov.Model.Conversation;
@@ -38,6 +41,8 @@ public class ChatActivity extends AppCompatActivity {
     private boolean oldMessagesAdded = false;
     private ArrayList<ChatMessage> newMessages;
     private String otherPers;
+    private Conversation currentConversation;
+    private User loggedUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,60 +74,52 @@ public class ChatActivity extends AppCompatActivity {
 
         FirebaseAuth auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
-        assert currentUser != null;
-        userDAO.getUser(currentUser.getEmail(), u -> chatDAO.getConversation(uid, u1 -> {
-            ArrayList<ChatMessage> messages = u1.getListMessageData();
-            newMessages.addAll(messages);
-            mMessageRecycler = findViewById(R.id.reyclerview_message_list);
 
-            mMessageAdapter = new MessageListAdapter(ChatActivity.this, messages);
-            mMessageRecycler.setLayoutManager(new LinearLayoutManager(this));
-            mMessageRecycler.setAdapter(mMessageAdapter);
-            mMessageRecycler.scrollToPosition(newMessages.size() - 1);
-        }));
-
-        send.setOnClickListener(v -> {
-            String s = text.getText().toString();
-            if (s.length() > 0) {
-
-                userDAO.getUser(currentUser.getEmail(), (User u) -> {
-                    newMessages.add(new ChatMessage(s, u));
-                    if (!oldMessagesAdded) {
-                        chatDAO.getConversation(uid, u12 -> {
-                            ArrayList<ChatMessage> aux = u12.getListMessageData();
-                            for (ChatMessage cm : aux) {
-                                if (newMessages.contains(cm)) {
-                                    newMessages.add(cm);
-                                }
-                            }
-                            newMessages.sort(Comparator.comparingLong(ChatMessage::getMessageTime));
-                            oldMessagesAdded = true;
-                        });
-                    }
-
-                    mMessageAdapter = new MessageListAdapter(ChatActivity.this, newMessages);
-                    mMessageRecycler.setLayoutManager(new LinearLayoutManager(ChatActivity.this));
-                    mMessageRecycler.setAdapter(mMessageAdapter);
-                    mMessageRecycler.scrollToPosition(newMessages.size() - 1);
-                });
+        userDAO.getUser(currentUser.getEmail(), new UserCallback() {
+            @Override
+            public void onCallback(User u) {
+                loggedUser = u;
 
             }
-            text.getText().clear();
         });
+
+        chatDAO.getConversation(uid, new MessagesCallback() {
+            @Override
+            public void onCallback(Conversation u) {
+                currentConversation = u;
+                displayConversation(currentConversation);
+            }
+        });
+
+        send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String s = text.getText().toString();
+                if (s.length() > 0) {
+                    currentConversation.getListMessageData().add(new ChatMessage(s, loggedUser));
+                    displayConversation(currentConversation);
+                    text.getText().clear();
+                    chatDAO.addNewMessage(currentConversation);
+
+                }
+
+            }
+        });
+    }
+
+    private void displayConversation(Conversation currentConversation) {
+        newMessages = currentConversation.getListMessageData();
+        mMessageRecycler = findViewById(R.id.reyclerview_message_list);
+        mMessageAdapter = new MessageListAdapter(ChatActivity.this, newMessages);
+        mMessageRecycler.setLayoutManager(new LinearLayoutManager(ChatActivity.this));
+        mMessageRecycler.setAdapter(mMessageAdapter);
+        mMessageRecycler.scrollToPosition(newMessages.size() - 1);
 
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
         // handle arrow click here
         if (item.getItemId() == android.R.id.home) {
-
-            userDAO.getUser(currentUser.getEmail(), u -> userDAO.getUser(otherPers, u1 -> {
-                ChatDAO ch = new ChatDAO();
-                Conversation c = new Conversation(u, u1, uid);
-                c.setListMessageData(newMessages);
-                ch.addNewMessage(c);
-            }));
-
             finish(); // close this activity and return to preview activity (if there is any)
         }
 

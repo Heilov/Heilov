@@ -27,7 +27,7 @@ public class GalleryDAO {
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
 
         DatabaseReference ref = mDatabase.child("server/saving-data/pics/");
-        ValueEventListener valueEventListener = ref.addValueEventListener(new ValueEventListener() {
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 ArrayList<Bitmap> photos = new ArrayList<>();
@@ -68,7 +68,7 @@ public class GalleryDAO {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
         String imageEncoded = Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT);
         Random rand = new Random();
-
+        auth = FirebaseAuth.getInstance();
         int n = rand.nextInt(5000) + 1;
         usersRef.child(auth.getCurrentUser().getUid() + n).setValue(new Photo(imageEncoded, auth.getCurrentUser().getEmail()));
     }

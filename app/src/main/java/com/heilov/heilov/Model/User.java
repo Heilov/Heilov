@@ -9,6 +9,7 @@ public class User {
     private String location;
     private String uid;
 
+
     public User() {
 
     }
@@ -21,6 +22,7 @@ public class User {
         this.email = email;
         this.profilePic = profilePic;
         this.uid = uid;
+
     }
 
     public String getName() {
@@ -78,4 +80,5 @@ public class User {
     public void setUid(String uid) {
         this.uid = uid;
     }
+
 }

@@ -87,6 +87,10 @@
             android:name=".Activities.MessagesActivity"
             android:label="@string/title_activity_messages"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".Activities.EditProfileActivity"
+            android:label="@string/title_activity_messages"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

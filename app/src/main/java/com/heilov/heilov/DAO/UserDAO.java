@@ -14,6 +14,10 @@ import com.heilov.heilov.Activities.MainActivity;
 import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 public class UserDAO {
     private DatabaseReference mDatabase;
     private FirebaseAuth auth;
@@ -32,6 +36,33 @@ public class UserDAO {
                         userCallback.onCallback(user);
                     }
                 }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    public void getRandomUser(UserCallback userCallback) {
+        auth = FirebaseAuth.getInstance();
+        FirebaseUser currentUser = auth.getCurrentUser();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference ref = mDatabase.child("server/saving-data/userdata/users");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                List<User> users = new ArrayList<>();
+                for (DataSnapshot singleSnapshot : dataSnapshot.getChildren()) {
+                    User user = singleSnapshot.getValue(User.class);
+
+                    users.add(user);
+                }
+                Random ran = new Random();
+                int x = ran.nextInt(users.size()-1);
+
+                userCallback.onCallback(users.get(x));
             }
 
             @Override
