@@ -2,6 +2,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_profile"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -50,17 +51,141 @@
         app:civ_border_color="#FFFFFFFF"
         app:civ_border_width="3dp" />
 
+    <TextView
+        android:id="@+id/textView22"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="207dp"
+        android:fontFamily="@font/guesspro"
+        android:text="Get laid tonight."
+        android:textColor="@color/colorPrimaryDark" />
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/textView22"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="220dp"
-        android:textColor="@color/colorPrimaryDark"
         android:fontFamily="@font/guesspro"
-        android:text="Get laid tonight. One of those can be yours" />
+        android:text="One of those can be yours."
+        android:textColor="@color/colorPrimaryDark" />
+
+    <android.support.v7.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/textView"
+        android:layout_alignParentStart="true">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/user1"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="100dp"
+                android:layout_marginTop="56dp"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="3dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+
+                android:id="@+id/user3"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="48dp"
+                android:layout_marginTop="104dp"
+                android:clickable="true"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="3dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+
+                android:id="@+id/user4"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="100dp"
+                android:layout_marginTop="56dp"
+                android:clickable="true"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="3dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+
+                android:id="@+id/user2"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="48dp"
+                android:layout_marginTop="104dp"
+                android:clickable="true"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="3dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/user0"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="24dp"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="3dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/user5"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="32dp"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/ic_launcher_round"
+                app:civ_border_color="#FFFFFFFF"
+                app:civ_border_width="3dp"
+                app:layout_constraintEnd_toStartOf="@+id/user2"
+                app:layout_constraintHorizontal_bias="0.722"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/user0" />
+        </android.support.constraint.ConstraintLayout>
+    </android.support.v7.widget.LinearLayoutCompat>
+
 
     <Button
         android:id="@+id/fab"

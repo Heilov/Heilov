@@ -27,6 +27,11 @@ import com.heilov.heilov.DAO.UserCallback;
 import com.heilov.heilov.DAO.UserDAO;
 import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
+import com.heilov.heilov.Utils.EmailNotifier;
+import com.heilov.heilov.Utils.InAppNotifier;
+import com.heilov.heilov.Utils.Observer;
+
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -70,12 +75,20 @@ public class EditProfileActivity extends AppCompatActivity {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
         userDAO = new UserDAO();
-        userDAO.getUser(currentUser.getEmail(), u -> {
-            Glide.with(EditProfileActivity.this).load(u.getProfilePic()).into((ImageView) findViewById(R.id.imageview_account_profile));
-            name.setText(u.getName());
-            age.setText(u.getAge() + "");
-            location.setText(u.getLocation());
-            loggedUser = u;
+        userDAO.getUser(currentUser.getEmail(), new UserCallback() {
+            @Override
+            public void onCallback(User u) {
+                Glide.with(EditProfileActivity.this).load(u.getProfilePic()).into((ImageView) findViewById(R.id.imageview_account_profile));
+                name.setText(u.getName());
+                age.setText(u.getAge() + "");
+                location.setText(u.getLocation());
+                loggedUser = u;
+            }
+
+            @Override
+            public void onCallback(List<User> userList) {
+
+            }
         });
 
         saveProfile.setText("Save Profile");
@@ -86,6 +99,13 @@ public class EditProfileActivity extends AppCompatActivity {
             loggedUser.setLocation(location.getText().toString());
             loggedUser.setGender(gender.getSelectedItem().toString());
             userDAO.saveUser(loggedUser);
+
+
+            Observer o1 = new InAppNotifier();
+            Observer o2 = new EmailNotifier();
+            loggedUser.attachObserver(o1);
+            loggedUser.attachObserver(o2);
+            loggedUser.notify(this, "Profile edited!");
         });
 
     }

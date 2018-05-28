@@ -1,6 +1,16 @@
 package com.heilov.heilov.Model;
 
-public class User {
+import android.content.Context;
+
+import com.heilov.heilov.Utils.EmailNotifier;
+import com.heilov.heilov.Utils.InAppNotifier;
+import com.heilov.heilov.Utils.Observable;
+import com.heilov.heilov.Utils.Observer;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class User implements Observable {
     private String name;
     private String email;
     private String profilePic;
@@ -8,7 +18,7 @@ public class User {
     private String gender;
     private String location;
     private String uid;
-
+    private ArrayList<Observer> observerList;
 
     public User() {
 
@@ -22,7 +32,6 @@ public class User {
         this.email = email;
         this.profilePic = profilePic;
         this.uid = uid;
-
     }
 
     public String getName() {
@@ -81,4 +90,25 @@ public class User {
         this.uid = uid;
     }
 
+
+
+    @Override
+    public void attachObserver(Observer o) {
+        if(observerList == null){
+            observerList = new ArrayList<>();
+        }
+        observerList.add(o);
+    }
+
+    @Override
+    public void deattachObserver(Observer o) {
+        observerList.remove(o);
+    }
+
+    @Override
+    public void notify(Context context, String message) {
+        for (Observer o : observerList) {
+            o.update(context, message);
+        }
+    }
 }

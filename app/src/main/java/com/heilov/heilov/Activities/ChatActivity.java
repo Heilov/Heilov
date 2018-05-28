@@ -17,7 +17,7 @@ import android.widget.LinearLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.heilov.heilov.DAO.ChatDAO;
-import com.heilov.heilov.DAO.MessagesCallback;
+import com.heilov.heilov.DAO.ChatsCallback;
 import com.heilov.heilov.DAO.UserCallback;
 import com.heilov.heilov.DAO.UserDAO;
 import com.heilov.heilov.Model.ChatMessage;
@@ -27,7 +27,7 @@ import com.heilov.heilov.R;
 import com.heilov.heilov.Utils.MessageListAdapter;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
     private ChatDAO chatDAO;
@@ -79,11 +79,15 @@ public class ChatActivity extends AppCompatActivity {
             @Override
             public void onCallback(User u) {
                 loggedUser = u;
+            }
+
+            @Override
+            public void onCallback(List<User> userList) {
 
             }
         });
 
-        chatDAO.getConversation(uid, new MessagesCallback() {
+        chatDAO.getConversation(uid, new ChatsCallback() {
             @Override
             public void onCallback(Conversation u) {
                 currentConversation = u;
@@ -96,11 +100,19 @@ public class ChatActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String s = text.getText().toString();
                 if (s.length() > 0) {
-                    currentConversation.getListMessageData().add(new ChatMessage(s, loggedUser));
-                    displayConversation(currentConversation);
-                    text.getText().clear();
-                    chatDAO.addNewMessage(currentConversation);
-
+                    if (currentConversation.getListMessageData() != null) {
+                        currentConversation.getListMessageData().add(new ChatMessage(s, loggedUser));
+                        displayConversation(currentConversation);
+                        text.getText().clear();
+                        chatDAO.addNewMessage(currentConversation);
+                    } else {
+                        ArrayList<ChatMessage> mess = new ArrayList<>();
+                        mess.add(new ChatMessage(s, loggedUser));
+                        currentConversation.setListMessageData(mess);
+                        displayConversation(currentConversation);
+                        text.getText().clear();
+                        chatDAO.addNewMessage(currentConversation);
+                    }
                 }
 
             }
@@ -108,13 +120,14 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void displayConversation(Conversation currentConversation) {
-        newMessages = currentConversation.getListMessageData();
-        mMessageRecycler = findViewById(R.id.reyclerview_message_list);
-        mMessageAdapter = new MessageListAdapter(ChatActivity.this, newMessages);
-        mMessageRecycler.setLayoutManager(new LinearLayoutManager(ChatActivity.this));
-        mMessageRecycler.setAdapter(mMessageAdapter);
-        mMessageRecycler.scrollToPosition(newMessages.size() - 1);
-
+        if (currentConversation.getListMessageData() != null) {
+            newMessages = currentConversation.getListMessageData();
+            mMessageRecycler = findViewById(R.id.reyclerview_message_list);
+            mMessageAdapter = new MessageListAdapter(ChatActivity.this, newMessages);
+            mMessageRecycler.setLayoutManager(new LinearLayoutManager(ChatActivity.this));
+            mMessageRecycler.setAdapter(mMessageAdapter);
+            mMessageRecycler.scrollToPosition(newMessages.size() - 1);
+        }
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {

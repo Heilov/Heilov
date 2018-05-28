@@ -2,7 +2,10 @@ package com.heilov.heilov.DAO;
 
 import com.heilov.heilov.Model.Conversation;
 
-public interface MessagesCallback {
+import java.util.ArrayList;
 
-    void onCallback(Conversation u);
+public interface MessagesCallback {
+    void onCallback(ArrayList<Conversation> u);
+
+
 }

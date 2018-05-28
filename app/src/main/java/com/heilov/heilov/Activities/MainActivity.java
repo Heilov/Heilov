@@ -12,7 +12,7 @@ import android.os.CountDownTimer;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
@@ -20,7 +20,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -38,7 +37,6 @@ import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.Profile;
 import com.facebook.login.LoginManager;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -46,35 +44,42 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.heilov.heilov.DAO.ChatDAO;
 import com.heilov.heilov.DAO.GalleryDAO;
+import com.heilov.heilov.DAO.MessagesCallback;
 import com.heilov.heilov.DAO.UserCallback;
 import com.heilov.heilov.DAO.UserDAO;
-import com.heilov.heilov.Model.ChatMessage;
 import com.heilov.heilov.Model.Conversation;
-import com.heilov.heilov.Model.Photo;
 import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
+import com.heilov.heilov.Utils.EmailNotifier;
+import com.heilov.heilov.Utils.InAppNotifier;
+import com.heilov.heilov.Utils.Observer;
 import com.twitter.sdk.android.core.Twitter;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterConfig;
 import com.twitter.sdk.android.core.TwitterCore;
 import com.twitter.sdk.android.core.TwitterSession;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private FirebaseAuth auth;
-    private DatabaseReference mDatabase;
-    private User loggedUser;
-
+    private User loggedUser, matchUser;
+    private ChatDAO chatDAO;
     private UserDAO userDAO;
     private GalleryDAO galleryDAO;
     private GoogleApiClient mGoogleApiClient;
+    private PopupWindow mPopupWindow;
+    private ArrayList<User> usersArrayList;
+    private int[] imgIDS = new int[]{R.id.user0, R.id.user1, R.id.user2, R.id.user3, R.id.user4, R.id.user5};
+    private DatabaseReference mDatabase;
+    private ArrayList<Conversation> usersConversations;
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,103 +99,64 @@ public class MainActivity extends AppCompatActivity
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         UserDAO userDAO = new UserDAO();
-        userDAO.getUser(currentUser.getEmail(), u -> {
-            loggedUser = u;
-            Glide.with(MainActivity.this).load(loggedUser.getProfilePic()).into((ImageView) findViewById(R.id.imageView));
 
-            TextView email = findViewById(R.id.nameText);
-            email.setText(loggedUser.getName());
+        userDAO.getUser(currentUser.getEmail(), new UserCallback() {
+            @Override
+            public void onCallback(User u) {
+                loggedUser = u;
+                Glide.with(MainActivity.this).load(loggedUser.getProfilePic()).into((ImageView) findViewById(R.id.imageView));
 
-            User u2 = new User("Florian Adelin", "adelin34@hotmail.com", "https://lookaside.facebook.com/platform/profilepic/?asid=2432840303408849&height=200&width=200&ext=1527161078&hash=AeSFWMIpSAot0Kva", "eNNEb00WOVdcN7p2dPjgslSjtkA3");
-            ChatDAO chatDAO = new ChatDAO();
-            chatDAO.saveNewChat(u, u2);
+                TextView name = findViewById(R.id.nameText);
+                name.setText(loggedUser.getName());
+            }
 
-            ArrayList<ChatMessage> chatMessages = new ArrayList<>();
-            chatMessages.add(new ChatMessage("Test", u2));
-            chatMessages.add(new ChatMessage("Test2", u2));
-            chatMessages.add(new ChatMessage("Test3", u));
-            Conversation c = new Conversation();
-            c.setFirstPerson(u);
-            c.setSecondPerson(u2);
-            c.setListMessageData(chatMessages);
-            c.setUid(u.getUid() + u2.getUid());
-            chatDAO.addNewMessage(c);
+            @Override
+            public void onCallback(List<User> userList) {
+
+            }
         });
+
+        userDAO.getUsers(new UserCallback() {
+            @Override
+            public void onCallback(User u) {
+
+            }
+
+            @Override
+            public void onCallback(List<User> userList) {
+                usersArrayList = (ArrayList<User>) userList;
+
+                if (usersArrayList.size() < 6) {
+                    int i = 0;
+                    for (User u : usersArrayList) {
+                        Glide.with(MainActivity.this).load(u.getProfilePic()).into((ImageView) findViewById(imgIDS[i]));
+
+                    }
+                } else {
+                    for (int i = 0; i < 6; i++) {
+                        Glide.with(MainActivity.this).load(usersArrayList.get(i).getProfilePic()).into((ImageView) findViewById(imgIDS[i]));
+
+                    }
+                }
+            }
+        });
+
+        chatDAO = new ChatDAO();
+        chatDAO.getChats(new MessagesCallback() {
+            @Override
+            public void onCallback(ArrayList<Conversation> u) {
+                usersConversations = u;
+            }
+        });
+
 /*
 De aici am schimbat eu chestii
  */
         Button fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "You got a match!!!", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-
-                PopupWindow mPopupWindow;
-                Context mContext = getApplicationContext();
-                LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(LAYOUT_INFLATER_SERVICE);
-                View customView = inflater.inflate(R.layout.show_user,null);
-
-                mPopupWindow = new PopupWindow(
-                        customView,
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                );
-
-                if(Build.VERSION.SDK_INT>=21){
-                    mPopupWindow.setElevation(5.0f);
-                }
-                RelativeLayout mRelativeLayout = (RelativeLayout) findViewById(R.id.activity_profile);
-
-                userDAO.getRandomUser(new UserCallback() {
-                    @Override
-                    public void onCallback(User u) {
-                        loggedUser = u;
-
-                    }
-                });
-
-                Glide.with(MainActivity.this).load(loggedUser.getProfilePic()).into((ImageView) customView.findViewById(R.id.user_IMG));
-                TextView user_name = customView.findViewById(R.id.user_name);
-                TextView user_age = customView.findViewById(R.id.user_age);
-                user_name.setText(loggedUser.getName());
-                user_age.setText(String.valueOf(loggedUser.getAge()));
-                mPopupWindow.showAtLocation(mRelativeLayout, Gravity.CENTER,0,0);
-
-                new CountDownTimer(10000, 1000) {
-
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                        Snackbar.make(view, "You can chat now!!!", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                        new CountDownTimer(2000, 1000) {
-
-                            @Override
-                            public void onTick(long millisUntilFinished) {
-                                Snackbar.make(view, "Chat now! Do not miss the chance to fill your bed!!!", Snackbar.LENGTH_LONG)
-                                        .setAction("Action", null).show();
-                            }
-
-                            @Override
-                            public void onFinish() {
-                                // TODO Auto-generated method stub
-                            }
-                        }.start();
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        // TODO Auto-generated method stub
-
-                        mPopupWindow.dismiss();
-                    }
-                }.start();
-
-            }
+        fab.setOnClickListener((View view) -> {
+            getMatch(view);
         });
-/*
-pana aici am schimbat eu chestii
- */
+
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -199,6 +165,75 @@ pana aici am schimbat eu chestii
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void getMatch(View view) {
+        Snackbar.make(view, "You got a match!!!", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+
+        Context mContext = getApplicationContext();
+        LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(LAYOUT_INFLATER_SERVICE);
+        View customView = inflater.inflate(R.layout.show_user, null);
+
+        mPopupWindow = new PopupWindow(
+                customView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+
+        RelativeLayout mRelativeLayout = findViewById(R.id.activity_profile);
+
+        boolean matched = false;
+        int x = 0;
+        while (!matched) {
+            Random ran = new Random();
+            x = ran.nextInt(usersArrayList.size() - 1);
+            String matchUID = usersArrayList.get(x).getUid();
+            String uid1 = loggedUser.getUid() + matchUID;
+            String uid2 = matchUID + loggedUser.getUid();
+
+            for (Conversation c : usersConversations) {
+                if (!c.getUid().equals(uid1) && !c.getUid().equals(uid2)) {
+                    matched = true;
+                }
+            }
+        }
+        matchUser = usersArrayList.get(x);
+        Glide.with(MainActivity.this).load(matchUser.getProfilePic()).into((ImageView) customView.findViewById(R.id.user_IMG));
+        TextView user_name = customView.findViewById(R.id.user_name);
+        TextView user_age = customView.findViewById(R.id.user_age);
+        user_name.setText("Name: " + matchUser.getName());
+        user_age.setText("Age: " + String.valueOf(matchUser.getAge()));
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.CENTER, 0, 140);
+        Snackbar.make(view, "You can chat now!!!", Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+
+        Observer o1 = new InAppNotifier();
+        Observer o2 = new EmailNotifier();
+        loggedUser.attachObserver(o1);
+        loggedUser.attachObserver(o2);
+        loggedUser.notify(this, "Got a match");
+
+
+
+        chatDAO.saveNewChat(loggedUser, matchUser);
+        chatDAO.getChats(u -> usersConversations = u);
+
+        new CountDownTimer(10000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                // TODO Auto-generated method stub
+
+                mPopupWindow.dismiss();
+            }
+        }.start();
     }
 
     @Override
@@ -248,9 +283,7 @@ pana aici am schimbat eu chestii
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            /*
-            Deschid galeria si mai jos in onActivityResult(int requestCode, int resultCode, Intent data) incarc poza
-             */
+
             Intent gallery = new Intent(
                     Intent.ACTION_PICK,
                     android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
@@ -275,7 +308,6 @@ pana aici am schimbat eu chestii
             if (twitterSession != null) {
                 TwitterCore.getInstance().getSessionManager().clearActiveSession();
             }
-
 
             auth.signOut();
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -317,7 +349,7 @@ pana aici am schimbat eu chestii
 
                 e.printStackTrace();
             }
-                       galleryDAO.savePhoto(scaled);
+            galleryDAO.savePhoto(scaled);
 
         }
     }

@@ -1,7 +1,5 @@
 package com.heilov.heilov.DAO;
 
-import android.util.Log;
-
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -25,7 +23,7 @@ public class ChatDAO {
         ref = mDatabase.child("server/saving-data/userdata/chats");
     }
 
-    public void getChats(ChatCallBack chatCallBack) {
+    public void getChats(MessagesCallback messagesCallback) {
         auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
 
@@ -38,7 +36,7 @@ public class ChatDAO {
                         chats.add(singleSnapshot.getValue(Conversation.class));
                     }
                 }
-                chatCallBack.onCallback(chats);
+                messagesCallback.onCallback(chats);
             }
 
             @Override
@@ -48,7 +46,7 @@ public class ChatDAO {
         });
     }
 
-    public void getConversation(String uid, MessagesCallback chatCallBack) {
+    public void getConversation(String uid, ChatsCallback chatCallBack) {
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

@@ -91,6 +91,19 @@
             android:name=".Activities.EditProfileActivity"
             android:label="@string/title_activity_messages"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <activity
+            android:name=".Utils.EmailNotifier"
+            android:label="@string/title_activity_messages"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SENDTO" />
+                <data android:scheme="mailto" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+
     </application>
 
 </manifest>

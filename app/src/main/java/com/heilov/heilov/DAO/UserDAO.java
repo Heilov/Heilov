@@ -22,7 +22,7 @@ public class UserDAO {
     private DatabaseReference mDatabase;
     private FirebaseAuth auth;
 
-    public void getUser(String email,UserCallback userCallback) {
+    public void getUser(String email, UserCallback userCallback) {
         auth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = auth.getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -45,9 +45,8 @@ public class UserDAO {
         });
     }
 
-    public void getRandomUser(UserCallback userCallback) {
+    public void getUsers(UserCallback userCallback) {
         auth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = auth.getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         DatabaseReference ref = mDatabase.child("server/saving-data/userdata/users");
         ref.addValueEventListener(new ValueEventListener() {
@@ -59,10 +58,7 @@ public class UserDAO {
 
                     users.add(user);
                 }
-                Random ran = new Random();
-                int x = ran.nextInt(users.size()-1);
-
-                userCallback.onCallback(users.get(x));
+                userCallback.onCallback(users);
             }
 
             @Override
@@ -72,8 +68,7 @@ public class UserDAO {
         });
     }
 
-
-    public void saveUser(User u){
+    public void saveUser(User u) {
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference ref = database.getReference("server/saving-data/userdata");
         DatabaseReference usersRef = ref.child("users");

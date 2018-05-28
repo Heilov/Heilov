@@ -12,14 +12,10 @@ import android.widget.ListView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.heilov.heilov.DAO.ChatCallBack;
 import com.heilov.heilov.DAO.ChatDAO;
 import com.heilov.heilov.Model.Conversation;
-import com.heilov.heilov.Model.User;
 import com.heilov.heilov.R;
 import com.heilov.heilov.Utils.ChatsAdapter;
-
-import java.util.ArrayList;
 
 public class MessagesActivity extends AppCompatActivity {
     private ChatDAO chatDAO;
