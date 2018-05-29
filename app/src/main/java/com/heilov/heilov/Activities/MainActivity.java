@@ -108,6 +108,11 @@ public class MainActivity extends AppCompatActivity
 
                 TextView name = findViewById(R.id.nameText);
                 name.setText(loggedUser.getName());
+
+                Observer o1 = new InAppNotifier();
+                Observer o2 = new EmailNotifier();
+                loggedUser.attachObserver(o1);
+                loggedUser.attachObserver(o2);
             }
 
             @Override
@@ -142,12 +147,7 @@ public class MainActivity extends AppCompatActivity
         });
 
         chatDAO = new ChatDAO();
-        chatDAO.getChats(new MessagesCallback() {
-            @Override
-            public void onCallback(ArrayList<Conversation> u) {
-                usersConversations = u;
-            }
-        });
+        chatDAO.getChats(u -> usersConversations = u);
 
 /*
 De aici am schimbat eu chestii
@@ -209,13 +209,7 @@ De aici am schimbat eu chestii
         Snackbar.make(view, "You can chat now!!!", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
 
-        Observer o1 = new InAppNotifier();
-        Observer o2 = new EmailNotifier();
-        loggedUser.attachObserver(o1);
-        loggedUser.attachObserver(o2);
         loggedUser.notify(this, "Got a match");
-
-
 
         chatDAO.saveNewChat(loggedUser, matchUser);
         chatDAO.getChats(u -> usersConversations = u);

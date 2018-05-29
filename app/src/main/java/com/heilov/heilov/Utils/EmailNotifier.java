@@ -124,7 +124,7 @@ public class EmailNotifier extends javax.mail.Authenticator implements Observer 
 
     @Override
     public void update(Context context, String message) {
-        setUserAndPas("developatheilov@gmail.com", "heilovapp2018");
+        setUserAndPas("developatheilov@gmail.com", "");
         getPasswordAuthentication();
         FirebaseUser loggedUser = FirebaseAuth.getInstance().getCurrentUser();
         try {

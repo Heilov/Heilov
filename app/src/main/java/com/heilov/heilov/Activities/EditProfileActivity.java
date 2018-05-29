@@ -83,6 +83,11 @@ public class EditProfileActivity extends AppCompatActivity {
                 age.setText(u.getAge() + "");
                 location.setText(u.getLocation());
                 loggedUser = u;
+
+                Observer o1 = new InAppNotifier();
+                Observer o2 = new EmailNotifier();
+                loggedUser.attachObserver(o1);
+                loggedUser.attachObserver(o2);
             }
 
             @Override
@@ -101,10 +106,7 @@ public class EditProfileActivity extends AppCompatActivity {
             userDAO.saveUser(loggedUser);
 
 
-            Observer o1 = new InAppNotifier();
-            Observer o2 = new EmailNotifier();
-            loggedUser.attachObserver(o1);
-            loggedUser.attachObserver(o2);
+
             loggedUser.notify(this, "Profile edited!");
         });
 
